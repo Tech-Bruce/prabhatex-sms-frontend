@@ -108,11 +108,11 @@ const UploadData = () => {
             <div className="flex gap-4">
               <label className={`flex-1 flex items-center justify-center gap-2 p-3 rounded-xl border-2 cursor-pointer transition-all ${stFormat === 'format1' ? 'border-indigo-500 bg-indigo-50 text-indigo-700' : 'border-slate-200 hover:border-slate-300 text-slate-600'}`}>
                 <input type="radio" name="stFormat" value="format1" checked={stFormat === 'format1'} onChange={(e) => setStFormat(e.target.value)} className="hidden" />
-                <span className="font-medium text-sm">Format 1 (PDF)</span>
+                <span className="font-medium text-sm">Format web</span>
               </label>
               <label className={`flex-1 flex items-center justify-center gap-2 p-3 rounded-xl border-2 cursor-pointer transition-all ${stFormat === 'format2' ? 'border-indigo-500 bg-indigo-50 text-indigo-700' : 'border-slate-200 hover:border-slate-300 text-slate-600'}`}>
                 <input type="radio" name="stFormat" value="format2" checked={stFormat === 'format2'} onChange={(e) => setStFormat(e.target.value)} className="hidden" />
-                <span className="font-medium text-sm">Format 2 (CSV/Excel)</span>
+                <span className="font-medium text-sm">Format whatsapp</span>
               </label>
             </div>
           </div>
