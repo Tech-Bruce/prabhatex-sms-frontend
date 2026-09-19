@@ -1,8 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Loader2, Trash2, Package, MapPin, Calendar, Weight, IndianRupee, CheckSquare, Square } from 'lucide-react';
 import { API_BASE_URL } from '../../config/api';
+import { useToast } from '../../context/ToastContext';
+import { useConfirm } from '../../context/ConfirmContext';
 
 const ProfessionalData = () => {
+  const { showToast } = useToast();
+  const { confirm } = useConfirm();
   const [data, setData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -32,7 +36,7 @@ const ProfessionalData = () => {
   };
 
   const handleSendSMS = async () => {
-    if (!window.confirm(`Are you sure you want to send SMS to ${selectedIds.length} customers?`)) return;
+    if (!(await confirm(`Are you sure you want to send SMS to ${selectedIds.length} customers?`))) return;
     setIsSendingSMS(true);
     try {
       const res = await fetch(`${API_BASE_URL}/couriers/professional/send-sms`, {
@@ -44,21 +48,29 @@ const ProfessionalData = () => {
       });
       const resData = await res.json();
       if (resData.success) {
-        alert(resData.message || "SMS sent successfully");
-        setSelectedIds([]);
+        const successIds = resData.successfulIds || selectedIds;
+        setData(prev => prev.filter(item => !successIds.includes(item.id)));
+        
+        if (resData.failedDetails && resData.failedDetails.length > 0) {
+          showToast(resData.message, 'warning');
+          setSelectedIds(resData.failedDetails.map(f => f.id));
+        } else {
+          showToast(resData.message || "SMS sent successfully", 'success');
+          setSelectedIds([]);
+        }
       } else {
-        alert(resData.message || "Failed to send SMS");
+        showToast(resData.message || "Failed to send SMS", 'error');
       }
     } catch (error) {
       console.error("Error sending SMS:", error);
-      alert("Error connecting to server");
+      showToast("Error connecting to server", 'error');
     } finally {
       setIsSendingSMS(false);
     }
   };
 
   const handleDeleteAll = async () => {
-    if (!window.confirm("Are you absolutely sure you want to delete ALL Professional Courier records? This action cannot be undone.")) return;
+    if (!(await confirm("Are you absolutely sure you want to delete ALL Professional Courier records? This action cannot be undone."))) return;
     setIsDeletingAll(true);
     try {
       const res = await fetch(`${API_BASE_URL}/couriers/professional/all`, {
@@ -69,18 +81,18 @@ const ProfessionalData = () => {
         setData([]);
         setSelectedIds([]);
       } else {
-        alert(resData.message || "Failed to delete all records");
+        showToast(resData.message || "Failed to delete all records", 'error');
       }
     } catch (error) {
       console.error("Error deleting all records:", error);
-      alert("Error connecting to server");
+      showToast("Error connecting to server", 'error');
     } finally {
       setIsDeletingAll(false);
     }
   };
 
   const handleBulkDelete = async () => {
-    if (!window.confirm(`Are you sure you want to delete ${selectedIds.length} records? This action cannot be undone.`)) return;
+    if (!(await confirm(`Are you sure you want to delete ${selectedIds.length} records? This action cannot be undone.`))) return;
     setIsDeletingBulk(true);
     try {
       const res = await fetch(`${API_BASE_URL}/couriers/professional/delete-bulk`, {
@@ -95,18 +107,18 @@ const ProfessionalData = () => {
         setData(prev => prev.filter(item => !selectedIds.includes(item.id)));
         setSelectedIds([]);
       } else {
-        alert(resData.message || "Failed to delete records");
+        showToast(resData.message || "Failed to delete records", 'error');
       }
     } catch (error) {
       console.error("Error deleting records:", error);
-      alert("Error connecting to server");
+      showToast("Error connecting to server", 'error');
     } finally {
       setIsDeletingBulk(false);
     }
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this record?")) return;
+    if (!(await confirm("Are you sure you want to delete this record?"))) return;
     try {
       const res = await fetch(`${API_BASE_URL}/couriers/professional/${id}`, {
         method: "DELETE",
@@ -115,11 +127,11 @@ const ProfessionalData = () => {
       if (resData.success) {
         setData(prev => prev.filter(item => item.id !== id));
       } else {
-        alert(resData.message || "Failed to delete record");
+        showToast(resData.message || "Failed to delete record", 'error');
       }
     } catch (error) {
       console.error("Error deleting record:", error);
-      alert("Error connecting to server");
+      showToast("Error connecting to server", 'error');
     }
   };
 

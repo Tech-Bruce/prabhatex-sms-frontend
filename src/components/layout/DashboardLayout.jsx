@@ -100,6 +100,18 @@ const DashboardLayout = ({ children, activePage, setActivePage, onLogout }) => {
           </button>
 
           <button
+            onClick={() => setActivePage('multiple-orders-sms')}
+            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 ${
+              activePage === 'multiple-orders-sms'
+                ? 'bg-indigo-500/10 text-indigo-600 font-medium'
+                : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+            }`}
+          >
+            <MessageSquare className="h-5 w-5" />
+            Multi Order SMS
+          </button>
+
+          <button
             onClick={() => setActivePage('customsms')}
             className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 ${
               activePage === 'customsms'

@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from 'react';
 import { UploadCloud, File, X, Loader2 } from 'lucide-react';
 import { API_BASE_URL } from '../../config/api';
@@ -8,6 +9,7 @@ const UploadData = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [message, setMessage] = useState(null);
   const [partner, setPartner] = useState('professional');
+  const [stFormat, setStFormat] = useState('format2');
   const fileInputRef = useRef(null);
 
   const handleDragOver = (e) => {
@@ -60,6 +62,9 @@ const UploadData = () => {
     // We'll upload the first file for now
     formData.append("file", files[0].original);
     formData.append("partner", partner);
+    if (partner === 'st') {
+      formData.append("stFormat", stFormat);
+    }
 
     try {
       const response = await fetch(`${API_BASE_URL}/couriers/upload`, {
@@ -93,9 +98,25 @@ const UploadData = () => {
           </label>
           <label className={`flex-1 flex items-center justify-center gap-2 p-4 rounded-xl border-2 cursor-pointer transition-all ${partner === 'st' ? 'border-indigo-500 bg-indigo-50 text-indigo-700' : 'border-slate-200 hover:border-slate-300 text-slate-600'}`}>
             <input type="radio" name="partner" value="st" checked={partner === 'st'} onChange={(e) => setPartner(e.target.value)} className="hidden" />
-            <span className="font-medium">ST Courier (PDF)</span>
+            <span className="font-medium">ST Courier</span>
           </label>
         </div>
+        
+        {partner === 'st' && (
+          <div className="mt-6">
+            <h3 className="text-sm font-semibold text-slate-700 mb-3">Select ST Courier Format</h3>
+            <div className="flex gap-4">
+              <label className={`flex-1 flex items-center justify-center gap-2 p-3 rounded-xl border-2 cursor-pointer transition-all ${stFormat === 'format1' ? 'border-indigo-500 bg-indigo-50 text-indigo-700' : 'border-slate-200 hover:border-slate-300 text-slate-600'}`}>
+                <input type="radio" name="stFormat" value="format1" checked={stFormat === 'format1'} onChange={(e) => setStFormat(e.target.value)} className="hidden" />
+                <span className="font-medium text-sm">Format 1 (PDF)</span>
+              </label>
+              <label className={`flex-1 flex items-center justify-center gap-2 p-3 rounded-xl border-2 cursor-pointer transition-all ${stFormat === 'format2' ? 'border-indigo-500 bg-indigo-50 text-indigo-700' : 'border-slate-200 hover:border-slate-300 text-slate-600'}`}>
+                <input type="radio" name="stFormat" value="format2" checked={stFormat === 'format2'} onChange={(e) => setStFormat(e.target.value)} className="hidden" />
+                <span className="font-medium text-sm">Format 2 (CSV/Excel)</span>
+              </label>
+            </div>
+          </div>
+        )}
       </div>
 
       <div 

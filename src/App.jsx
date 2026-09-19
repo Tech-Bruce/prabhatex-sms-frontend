@@ -7,6 +7,7 @@ import ProfessionalData from './components/dashboard/ProfessionalData';
 import STCourierData from './components/dashboard/STCourierData';
 import SMSHistory from './components/dashboard/SMSHistory';
 import CustomSMS from './components/dashboard/CustomSMS';
+import MultipleOrdersSMS from './components/dashboard/MultipleOrdersSMS';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
@@ -32,6 +33,7 @@ function App() {
         {activePage === 'stcourier' && <STCourierData />}
         {activePage === 'upload' && <UploadData />}
         {activePage === 'sms' && <SMSHistory />}
+        {activePage === 'multiple-orders-sms' && <MultipleOrdersSMS />}
         {activePage === 'customsms' && <CustomSMS />}
       </DashboardLayout>
     );

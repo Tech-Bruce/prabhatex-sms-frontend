@@ -1,16 +1,28 @@
 import React, { useState, useEffect } from 'react';
 import { MessageSquare, Search, Loader2, CheckCircle2, XCircle, Phone, Clock, FileText, Trash2 } from 'lucide-react';
 import { API_BASE_URL } from '../../config/api';
+import { useToast } from '../../context/ToastContext';
+import { useConfirm } from '../../context/ConfirmContext';
 
 const SMSHistory = () => {
+  const { showToast } = useToast();
+  const { confirm } = useConfirm();
   const [data, setData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [fromDate, setFromDate] = useState('');
+  const [toDate, setToDate] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
 
+  const handleResetFilters = () => {
+    setSearchTerm('');
+    setFromDate('');
+    setToDate('');
+  };
+
   const handleClearHistory = async () => {
-    if (!window.confirm('Are you sure you want to delete all SMS history? This action cannot be undone.')) {
+    if (!(await confirm('Are you sure you want to delete all SMS history? This action cannot be undone.'))) {
       return;
     }
     
@@ -23,10 +35,10 @@ const SMSHistory = () => {
       if (result.success) {
         setData([]);
       } else {
-        alert(result.message || 'Failed to delete SMS history');
+        showToast(result.message || 'Failed to delete SMS history', 'error');
       }
     } catch (err) {
-      alert('Error connecting to server');
+      showToast('Error connecting to server', 'error');
     } finally {
       setIsDeleting(false);
     }
@@ -52,10 +64,29 @@ const SMSHistory = () => {
     fetchData();
   }, []);
 
-  const filteredData = data.filter(item => 
-    (item.phoneNumber && item.phoneNumber.includes(searchTerm)) ||
-    (item.awbNo && item.awbNo.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
+  const filteredData = data.filter(item => {
+    const matchesSearch = 
+      (item.phoneNumber && item.phoneNumber.includes(searchTerm)) ||
+      (item.awbNo && item.awbNo.toLowerCase().includes(searchTerm.toLowerCase()));
+      
+    let matchesDate = true;
+    if (fromDate || toDate) {
+      const itemDate = new Date(item.createdAt);
+      
+      if (fromDate) {
+        const from = new Date(fromDate);
+        from.setHours(0, 0, 0, 0);
+        if (itemDate < from) matchesDate = false;
+      }
+      if (toDate) {
+        const to = new Date(toDate);
+        to.setHours(23, 59, 59, 999);
+        if (itemDate > to) matchesDate = false;
+      }
+    }
+    
+    return matchesSearch && matchesDate;
+  });
 
   if (isLoading) {
     return (
@@ -87,26 +118,55 @@ const SMSHistory = () => {
   return (
     <div className="max-w-7xl mx-auto space-y-6">
       {/* Header Section */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">SMS History</h1>
           <p className="text-slate-500 text-sm mt-1">View the delivery log of all SMS messages sent to customers.</p>
         </div>
-        <div className="flex w-full sm:w-auto items-center gap-3">
-          <div className="relative flex-1 sm:w-72">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-            <input 
-              type="text"
-              placeholder="Search by Phone or AWB No..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 shadow-sm transition-all"
-            />
+        <div className="flex flex-col lg:flex-row w-full xl:w-auto items-stretch lg:items-center gap-3">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full lg:w-auto">
+            <div className="relative w-full sm:w-64">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+              <input 
+                type="text"
+                placeholder="Search by Phone or AWB No..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 shadow-sm transition-all"
+              />
+            </div>
+            
+            <div className="flex items-center gap-2 w-full sm:w-auto mt-2 sm:mt-0">
+              <input
+                type="date"
+                value={fromDate}
+                onChange={(e) => setFromDate(e.target.value)}
+                className="flex-1 sm:w-36 px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 shadow-sm transition-all text-slate-600"
+                title="From Date"
+              />
+              <span className="text-slate-400 text-sm">to</span>
+              <input
+                type="date"
+                value={toDate}
+                onChange={(e) => setToDate(e.target.value)}
+                className="flex-1 sm:w-36 px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 shadow-sm transition-all text-slate-600"
+                title="To Date"
+              />
+              {(searchTerm || fromDate || toDate) && (
+                <button
+                  onClick={handleResetFilters}
+                  className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-colors shrink-0"
+                  title="Reset Filters"
+                >
+                  <XCircle className="w-5 h-5" />
+                </button>
+              )}
+            </div>
           </div>
           <button
             onClick={handleClearHistory}
             disabled={isDeleting || data.length === 0}
-            className="flex items-center gap-2 px-4 py-2 bg-red-50 text-red-600 border border-red-200 rounded-xl text-sm font-medium hover:bg-red-100 hover:text-red-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+            className="flex items-center justify-center gap-2 px-4 py-2 bg-red-50 text-red-600 border border-red-200 rounded-xl text-sm font-medium hover:bg-red-100 hover:text-red-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap w-full lg:w-auto mt-2 lg:mt-0"
           >
             {isDeleting ? (
               <Loader2 className="h-4 w-4 animate-spin" />
